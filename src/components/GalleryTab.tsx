@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { ImageIcon, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SafeImage from './SafeImage';
+import {
+  boudhanathStupaImg,
+  nagarkotHimalayasImg,
+  patanDurbarSquareImg,
+  newariFeastFoodImg,
+  swayambhunathTempleImg,
+} from '../assets/images';
 
 export default function GalleryTab() {
   const [filter, setFilter] = useState('all');
@@ -10,35 +17,35 @@ export default function GalleryTab() {
     {
       id: 1,
       category: 'heritage',
-      url: '/src/assets/images/boudhanath_stupa_1791436937624.jpg',
+      url: boudhanathStupaImg,
       fallbackUrl: 'https://picsum.photos/seed/boudhanath-stupa/800/1000',
       title: 'Boudhanath Stupa'
     },
     {
       id: 2,
       category: 'nature',
-      url: '/src/assets/images/nagarkot_himalayas_1791436974184.jpg',
+      url: nagarkotHimalayasImg,
       fallbackUrl: 'https://picsum.photos/seed/nagarkot-himalayas/800/1000',
       title: 'Himalayan View from Nagarkot'
     },
     {
       id: 3,
       category: 'heritage',
-      url: '/src/assets/images/patan_durbar_square_1791436949522.jpg',
+      url: patanDurbarSquareImg,
       fallbackUrl: 'https://picsum.photos/seed/patan-durbar-square/800/1000',
       title: 'Patan Durbar Square'
     },
     {
       id: 4,
       category: 'food',
-      url: '/src/assets/images/newari_feast_food_1791436960436.jpg',
+      url: newariFeastFoodImg,
       fallbackUrl: 'https://picsum.photos/seed/newari-feast-food/800/1000',
       title: 'Newari Feast (Samay Baji)'
     },
     {
       id: 5,
       category: 'heritage',
-      url: '/src/assets/images/swayambhunath_temple_1791436985637.jpg',
+      url: swayambhunathTempleImg,
       fallbackUrl: 'https://picsum.photos/seed/swayambhunath-temple/800/1000',
       title: 'Swayambhunath Architecture'
     },

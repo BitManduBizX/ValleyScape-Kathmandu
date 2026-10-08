@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { Map, MapPin, Navigation, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SafeImage from './SafeImage';
+import {
+  boudhanathStupaImg,
+  nagarkotHimalayasImg,
+  patanDurbarSquareImg,
+  swayambhunathTempleImg,
+} from '../assets/images';
 
 export default function DestinationsTab() {
   const [filter, setFilter] = useState('all');
@@ -13,7 +19,7 @@ export default function DestinationsTab() {
       district: 'kathmandu',
       desc: 'Historic seat of the former Kathmandu Kingdom, rich in traditional architecture.',
       type: 'Heritage',
-      img: '/src/assets/images/patan_durbar_square_1791436949522.jpg',
+      img: patanDurbarSquareImg,
       fallbackImg: 'https://picsum.photos/seed/kathmandu-durbar-square/600/400'
     },
     {
@@ -22,7 +28,7 @@ export default function DestinationsTab() {
       district: 'patan',
       desc: 'Marvel at the fine Newari architecture and the stunning Krishna Mandir.',
       type: 'Heritage',
-      img: '/src/assets/images/patan_durbar_square_1791436949522.jpg',
+      img: patanDurbarSquareImg,
       fallbackImg: 'https://picsum.photos/seed/patan-durbar-square/600/400'
     },
     {
@@ -40,7 +46,7 @@ export default function DestinationsTab() {
       district: 'kathmandu',
       desc: 'The Monkey Temple, offering panoramic views of the entire valley.',
       type: 'Temple',
-      img: '/src/assets/images/swayambhunath_temple_1791436985637.jpg',
+      img: swayambhunathTempleImg,
       fallbackImg: 'https://picsum.photos/seed/swayambhunath-monkey-temple/600/400'
     },
     {
@@ -49,7 +55,7 @@ export default function DestinationsTab() {
       district: 'kathmandu',
       desc: 'One of the largest spherical stupas in Nepal and the world.',
       type: 'Stupa',
-      img: '/src/assets/images/boudhanath_stupa_1791436937624.jpg',
+      img: boudhanathStupaImg,
       fallbackImg: 'https://picsum.photos/seed/boudhanath-stupa-nepal/600/400'
     },
     {
@@ -67,7 +73,7 @@ export default function DestinationsTab() {
       district: 'kathmandu',
       desc: 'Cable car ride offering sweeping views of the valley and the Himalayas.',
       type: 'Nature',
-      img: '/src/assets/images/nagarkot_himalayas_1791436974184.jpg',
+      img: nagarkotHimalayasImg,
       fallbackImg: 'https://picsum.photos/seed/chandragiri-hills/600/400'
     },
     {
@@ -76,7 +82,7 @@ export default function DestinationsTab() {
       district: 'bhaktapur',
       desc: 'Famous for its sunrise views of the Himalayas, including Mount Everest on clear days.',
       type: 'Nature',
-      img: '/src/assets/images/nagarkot_himalayas_1791436974184.jpg',
+      img: nagarkotHimalayasImg,
       fallbackImg: 'https://picsum.photos/seed/nagarkot-sunrise/600/400'
     }
   ];

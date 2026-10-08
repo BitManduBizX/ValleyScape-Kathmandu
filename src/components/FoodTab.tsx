@@ -2,6 +2,7 @@ import React from 'react';
 import { UtensilsCrossed, Star, Coffee, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SafeImage from './SafeImage';
+import { newariFeastFoodImg } from '../assets/images';
 
 export default function FoodTab() {
   const dishes = [
@@ -108,7 +109,7 @@ export default function FoodTab() {
           <div className="bg-gradient-to-b from-[#F7F2EA] to-[#FDFBF7] dark:from-[#2A2A2A] dark:to-[#1A1A1A] p-6 rounded-2xl border border-[#E5A93C]/30 shadow-inner space-y-6">
             <div className="aspect-[16/10] rounded-xl overflow-hidden border border-[#E5A93C]/20">
               <SafeImage
-                src="/src/assets/images/newari_feast_food_1791436960436.jpg"
+                src={newariFeastFoodImg}
                 fallbackSrc="https://picsum.photos/seed/nepali-momo-feast/800/500"
                 alt="Traditional Newari Feast & Momo"
                 fallbackLabel="Traditional Newari Cuisine"

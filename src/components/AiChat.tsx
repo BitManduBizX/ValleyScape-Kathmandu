@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, Key, MessageSquare, MapPin, Loader2, Save } from 'lucide-react';
+import { X, Send, MessageSquare, MapPin, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleGenAI } from '@google/genai';
 
 interface AiChatProps {
   isOpen: boolean;
@@ -15,29 +14,46 @@ interface Message {
 }
 
 export default function AiChat({ isOpen, onClose }: AiChatProps) {
-  const [apiKey, setApiKey] = useState('');
-  const [hasKey, setHasKey] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', content: 'Namaste! I am Guru Bhote, your local guide to the Kathmandu Valley. How can I help you plan your journey today?' }
+    {
+      id: '1',
+      role: 'assistant',
+      content:
+        'Namaste! I am Guru Bhote, your local guide to the Kathmandu Valley. How can I help you plan your journey today?',
+    },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Read environment configuration safely without hardcoding any keys
+  const envApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+
   useEffect(() => {
-    // Check for API key and consent on mount
-    const savedKey = localStorage.getItem('__vk_gem_k');
     const savedConsent = localStorage.getItem('__vk_consent');
-    if (savedKey) {
-      setApiKey(atob(savedKey));
-      setHasKey(true);
-    }
+    const savedHistory = localStorage.getItem('__vk_chat_history');
     if (savedConsent === 'true') {
       setConsentGiven(true);
     }
+    if (savedHistory) {
+      try {
+        const parsed = JSON.parse(savedHistory);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      } catch {
+        // Ignore corrupted history
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (consentGiven && messages.length > 1) {
+      localStorage.setItem('__vk_chat_history', JSON.stringify(messages));
+    }
+  }, [messages, consentGiven]);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,65 +61,57 @@ export default function AiChat({ isOpen, onClose }: AiChatProps) {
     }
   }, [messages, isOpen, isLoading]);
 
-  const saveApiKey = () => {
-    if (apiKey.trim()) {
-      localStorage.setItem('__vk_gem_k', btoa(apiKey.trim()));
-      setHasKey(true);
-    }
-  };
-
   const handleConsent = () => {
     localStorage.setItem('__vk_consent', 'true');
     setConsentGiven(true);
   };
 
-  const clearKey = () => {
-    localStorage.removeItem('__vk_gem_k');
-    setApiKey('');
-    setHasKey(false);
-  };
-
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !hasKey || isLoading) return;
+    if (!input.trim() || isLoading) return;
 
     const userMsg = input.trim();
     setInput('');
-    const newMessages: Message[] = [...messages, { id: Date.now().toString(), role: 'user', content: userMsg }];
+    const newMessages: Message[] = [
+      ...messages,
+      { id: Date.now().toString(), role: 'user', content: userMsg },
+    ];
     setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: apiKey });
-      
-      const systemPrompt = `You are Valley Guru (or Guru Bhote), a friendly, context-aware, and deeply knowledgeable local guide for the Kathmandu Valley in Nepal. Respond using accurate, trusted travel data, cultural nuance, respectful etiquette, and authentic warmth. Use occasional Nepali greetings like 'Namaste!' where appropriate. Keep answers concise, helpful, and visually structured if needed.`;
-
-      const formattedHistory = newMessages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }));
-
-      // We only send the last few messages for context to keep payload small, plus the current one
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [
-            { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'model', parts: [{ text: 'Understood. I am Valley Guru.' }] },
-            ...formattedHistory
-        ]
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(envApiKey ? { 'X-Client-Env-Configured': 'true' } : {}),
+        },
+        body: JSON.stringify({
+          messages: newMessages.slice(-10),
+        }),
       });
 
-      if (response.text) {
-        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: response.text }]);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to reach AI guide.');
+      }
+
+      if (data.text) {
+        setMessages((prev) => [
+          ...prev,
+          { id: (Date.now() + 1).toString(), role: 'assistant', content: data.text },
+        ]);
       }
     } catch (error: any) {
       console.error('AI Error:', error);
-      let errorMsg = 'Oops, my internet connection to the Himalayas seems to be broken. Please try again.';
-      if (error.message?.includes('API key')) {
-        errorMsg = 'Your API key seems to be invalid or expired. Please update it in the settings.';
-        clearKey();
-      }
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: errorMsg }]);
+      const errorMsg =
+        error?.message ||
+        'Oops, my connection to the Himalayas encountered a temporary hiccup. Please try again.';
+      setMessages((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), role: 'assistant', content: errorMsg },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +138,7 @@ export default function AiChat({ isOpen, onClose }: AiChatProps) {
                 <p className="text-xs text-white/80">Valley AI Guide</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-full transition-colors"
             >
@@ -142,7 +150,9 @@ export default function AiChat({ isOpen, onClose }: AiChatProps) {
             <div className="flex-1 p-6 flex flex-col justify-center items-center text-center space-y-6">
               <MapPin className="w-16 h-16 text-[#C85A32]" />
               <div>
-                <h3 className="text-xl font-bold text-[#1A1A1A] dark:text-white mb-2">Welcome to Valley AI</h3>
+                <h3 className="text-xl font-bold text-[#1A1A1A] dark:text-white mb-2">
+                  Welcome to Valley AI
+                </h3>
                 <p className="text-[#5A524C] dark:text-gray-400 text-sm">
                   To provide you with the best personalized local guidance, Guru Bhote would like to save your conversation history locally in your browser.
                 </p>
@@ -154,47 +164,19 @@ export default function AiChat({ isOpen, onClose }: AiChatProps) {
                 I Agree, Let's Chat
               </button>
             </div>
-          ) : !hasKey ? (
-            <div className="flex-1 p-6 flex flex-col justify-center bg-[#FDFBF7] dark:bg-[#1A1A1A]">
-              <div className="bg-white dark:bg-[#2A2A2A] p-6 rounded-2xl border border-[#E5A93C]/20 shadow-sm text-center">
-                <Key className="w-12 h-12 text-[#E5A93C] mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-[#1A1A1A] dark:text-white mb-2">Connect to Google Gemini</h3>
-                <p className="text-sm text-[#5A524C] dark:text-gray-400 mb-6">
-                  Enter your free Google Gemini API Key to enable AI Guide. (No account required, 100% free from Google AI Studio).
-                </p>
-                <div className="space-y-3">
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-[#1A1A1A] dark:text-white focus:outline-none focus:border-[#C85A32] dark:focus:border-[#E5A93C]"
-                  />
-                  <button
-                    onClick={saveApiKey}
-                    disabled={!apiKey.trim()}
-                    className="w-full flex justify-center items-center gap-2 py-2.5 bg-[#C85A32] text-white rounded-lg font-medium hover:bg-[#8B263E] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Save className="w-4 h-4" />
-                    Save Securely
-                  </button>
-                  <p className="text-[10px] text-gray-500">Key is stored locally in your browser and never sent to our servers.</p>
-                </div>
-              </div>
-            </div>
           ) : (
             <>
               {/* Chat Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#FDFBF7] dark:bg-[#1A1A1A]">
                 {messages.map((msg) => (
-                  <div 
-                    key={msg.id} 
+                  <div
+                    key={msg.id}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div 
-                      className={`max-w-[85%] p-3 rounded-2xl text-sm ${
-                        msg.role === 'user' 
-                          ? 'bg-[#C85A32] text-white rounded-tr-sm' 
+                    <div
+                      className={`max-w-[85%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${
+                        msg.role === 'user'
+                          ? 'bg-[#C85A32] text-white rounded-tr-sm'
                           : 'bg-white dark:bg-[#2A2A2A] text-[#1A1A1A] dark:text-gray-200 border border-[#E5A93C]/20 rounded-tl-sm shadow-sm'
                       }`}
                     >
@@ -231,13 +213,7 @@ export default function AiChat({ isOpen, onClose }: AiChatProps) {
                   </button>
                 </form>
                 <div className="flex justify-between items-center mt-2 px-2">
-                  <span className="text-[10px] text-gray-500">Gemini 1.5 Flash</span>
-                  <button 
-                    onClick={clearKey}
-                    className="text-[10px] text-red-500 hover:underline"
-                  >
-                    Clear API Key
-                  </button>
+                  <span className="text-[10px] text-gray-500">Valley AI Guide</span>
                 </div>
               </div>
             </>

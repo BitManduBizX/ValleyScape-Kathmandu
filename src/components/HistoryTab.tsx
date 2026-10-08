@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, Clock, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SafeImage from './SafeImage';
+import { swayambhunathTempleImg } from '../assets/images';
 
 export default function HistoryTab() {
   const [lang, setLang] = React.useState<'en'|'ne'>('en');
@@ -105,7 +106,7 @@ export default function HistoryTab() {
           </p>
           <div className="mt-6 aspect-video bg-[#F7F2EA] dark:bg-[#1A1A1A] rounded-xl flex items-center justify-center border border-[#E5A93C]/20 overflow-hidden relative">
             <SafeImage
-              src="/src/assets/images/swayambhunath_temple_1791436985637.jpg"
+              src={swayambhunathTempleImg}
               fallbackSrc="https://picsum.photos/seed/chhobhar-gorge-kathmandu/800/450"
               alt="Ancient Kathmandu Valley & Swayambhunath Hill"
               fallbackLabel="Chhobhar Gorge & Ancient Valley"
